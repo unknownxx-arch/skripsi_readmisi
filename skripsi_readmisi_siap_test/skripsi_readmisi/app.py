@@ -772,7 +772,6 @@ if st.query_params.get("admin") == "1":
             st.info("Belum ada data di database.")
             return
 
-        # Key dinamis berdasarkan jumlah & ID maksimal agar otomatis refresh saat ada data baru masuk
         max_id = int(df_admin["id_prediksi"].max())
         editor_key = f"editor_db_admin_{len(df_admin)}_{max_id}"
 
@@ -784,7 +783,6 @@ if st.query_params.get("admin") == "1":
             key=editor_key,
         )
 
-        # Abaikan baris kosong tambahan di paling bawah jika belum diisi
         df_edited_clean = df_edited.dropna(subset=["id_prediksi"])
 
         if not df_edited_clean.equals(df_admin):
@@ -793,4 +791,3 @@ if st.query_params.get("admin") == "1":
             st.rerun()
 
     panel_editor_admin()
-            st.rerun()
