@@ -7,3 +7,4 @@ joblib
 matplotlib
 seaborn
 openpyxl
+mysql-connector-python
