@@ -2,7 +2,7 @@ from datetime import datetime
 import io
 import os
 import sys
-from database import ambil_riwayat, buat_kode_pasien_baru, simpan_prediksi
+from database import  ambil_riwayat, ambil_semua_raw, buat_kode_pasien_baru, simpan_perubahan_admin, simpan_prediksi
 import joblib
 import numpy as np
 import pandas as pd
