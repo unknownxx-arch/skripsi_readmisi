@@ -1,16 +1,30 @@
 from datetime import datetime
 import json
-import mysql.connector
+import os
+import sqlite3
 import pandas as pd
+
+# Menyimpan file database lokal otomatis di folder yang sama dengan database.py
+DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "db_readmisi.sqlite")
 
 
 def get_connection():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="",
-        database="db_readmisi",
-    )
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    cursor = conn.cursor()
+    # Otomatis membuat tabel riwayat_prediksi jika belum ada
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS riwayat_prediksi (
+            id_prediksi INTEGER PRIMARY KEY AUTOINCREMENT,
+            waktu_prediksi TEXT,
+            kode_pasien TEXT,
+            algoritma TEXT,
+            probabilitas_risiko REAL,
+            hasil_klasifikasi TEXT,
+            detail_fitur TEXT
+        )
+    """)
+    conn.commit()
+    return conn
 
 
 def simpan_prediksi(kode_pasien, algoritma, probabilitas, hasil, fitur_dict):
@@ -19,10 +33,10 @@ def simpan_prediksi(kode_pasien, algoritma, probabilitas, hasil, fitur_dict):
     query = """
         INSERT INTO riwayat_prediksi 
         (waktu_prediksi, kode_pasien, algoritma, probabilitas_risiko, hasil_klasifikasi, detail_fitur)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        VALUES (?, ?, ?, ?, ?, ?)
     """
     values = (
-        datetime.now(),
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         kode_pasien,
         algoritma,
         float(probabilitas),
@@ -41,9 +55,9 @@ def ambil_riwayat():
         SELECT id_prediksi, waktu_prediksi, kode_pasien, algoritma, 
                ROUND(probabilitas_risiko * 100, 2) AS risiko_persen, hasil_klasifikasi 
         FROM riwayat_prediksi 
-        ORDER BY waktu_prediksi DESC
+        ORDER BY id_prediksi DESC
     """
-    df = pd.read_sql(query, conn)
+    df = pd.read_sql_query(query, conn)
     conn.close()
     return df
 
