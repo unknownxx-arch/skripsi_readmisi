@@ -759,3 +759,24 @@ with tab_riwayat:
             )
 
     tampilkan_riwayat_live()
+    # --- EDITOR DATABASE TERSEMBUNYI (HANYA MUNCUL JIKA URL MEMAKAI ?admin=1) ---
+if st.query_params.get("admin") == "1":
+    st.divider()
+    st.subheader("Mode Editor Database (Admin)")
+    st.caption("Klik dua kali pada sel untuk mengedit teks/angka, atau pilih baris di sisi kiri lalu tekan Delete untuk menghapus. Perubahan tersimpan otomatis.")
+
+    df_admin = ambil_semua_raw()
+    if df_admin.empty:
+        st.info("Belum ada data di database.")
+    else:
+        df_edited = st.data_editor(
+            df_admin,
+            num_rows="dynamic",
+            use_container_width=True,
+            disabled=["id_prediksi"],
+            key="editor_db_admin",
+        )
+        if not df_edited.equals(df_admin):
+            simpan_perubahan_admin(df_admin, df_edited)
+            st.toast("Perubahan database tersimpan!", icon="✅")
+            st.rerun()
