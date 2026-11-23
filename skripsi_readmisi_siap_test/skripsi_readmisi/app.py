@@ -759,24 +759,38 @@ with tab_riwayat:
             )
 
     tampilkan_riwayat_live()
-    # --- EDITOR DATABASE TERSEMBUNYI (HANYA MUNCUL JIKA URL MEMAKAI ?admin=1) ---
+# --- EDITOR DATABASE TERSEMBUNYI (HANYA MUNCUL JIKA URL MEMAKAI ?admin=1) ---
 if st.query_params.get("admin") == "1":
     st.divider()
     st.subheader("Mode Editor Database (Admin)")
-    st.caption("Klik dua kali pada sel untuk mengedit teks/angka, atau pilih baris di sisi kiri lalu tekan Delete untuk menghapus. Perubahan tersimpan otomatis.")
+    st.caption("Klik dua kali pada sel untuk mengedit teks/angka, atau pilih baris di sisi kiri lalu tekan Delete untuk menghapus. Otomatis sinkron setiap 3 detik.")
 
-    df_admin = ambil_semua_raw()
-    if df_admin.empty:
-        st.info("Belum ada data di database.")
-    else:
+    @st.fragment(run_every="3s")
+    def panel_editor_admin():
+        df_admin = ambil_semua_raw()
+        if df_admin.empty:
+            st.info("Belum ada data di database.")
+            return
+
+        # Key dinamis berdasarkan jumlah & ID maksimal agar otomatis refresh saat ada data baru masuk
+        max_id = int(df_admin["id_prediksi"].max())
+        editor_key = f"editor_db_admin_{len(df_admin)}_{max_id}"
+
         df_edited = st.data_editor(
             df_admin,
             num_rows="dynamic",
             use_container_width=True,
             disabled=["id_prediksi"],
-            key="editor_db_admin",
+            key=editor_key,
         )
-        if not df_edited.equals(df_admin):
-            simpan_perubahan_admin(df_admin, df_edited)
+
+        # Abaikan baris kosong tambahan di paling bawah jika belum diisi
+        df_edited_clean = df_edited.dropna(subset=["id_prediksi"])
+
+        if not df_edited_clean.equals(df_admin):
+            simpan_perubahan_admin(df_admin, df_edited_clean)
             st.toast("Perubahan database tersimpan!", icon="✅")
+            st.rerun()
+
+    panel_editor_admin()
             st.rerun()
